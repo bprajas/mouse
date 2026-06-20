@@ -60,7 +60,6 @@ Press `q` to quit.
 * Better multi-monitor support
 * Eye tracking mode
 * Facial gesture controls
-* Calibration system
 * Sensitivity settings
 
 ## Current Status
