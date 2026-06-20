@@ -1,4 +1,4 @@
-Gesture Base Mouse
+#Gesture Base Mouse
 
 Control your mouse using hand gestures and a webcam.
 
