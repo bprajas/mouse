@@ -16,8 +16,8 @@ Built with MediaPipe hand tracking, OpenCV, and Win32 mouse APIs.
 
 My webcam feed had to be mirrored, so the controls are:
 
-* **Left Hand** → Move cursor
-* **Right Hand** → Click / Drag
+* **Left Hand** → Move cursor / Right Click
+* **Right Hand** → Left Click / Drag
 
 ### Movement
 
@@ -30,7 +30,14 @@ Bring the thumb and index finger together on the right hand.
 * Pinch → Mouse Down
 * Release → Mouse Up
 
-This allows both normal clicking and click-and-drag operations.
+This allows both normal left clicking and click-and-drag operations.
+
+Bring the thumb and middle finger together on the left hand.
+
+* Pinch → Mouse Down
+* Release → Mouse Up
+
+This allows normal roght click.
 
 ## Running
 
@@ -52,7 +59,7 @@ Press `q` to quit.
 
 * Multi-monitor support is still a bit cursed.
 * Cursor can occasionally teleport on extended displays.
-* Tracking quality depends on lighting and camera quality.
+* Tracking quality depends on lighting and camera quality and camera position. It is preferable to keep the webcam slightly above or at your level for best functionality.
 * Only tested on Windows.
 
 ## Future Ideas
