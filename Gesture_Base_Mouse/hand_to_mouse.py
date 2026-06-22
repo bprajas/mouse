@@ -1,10 +1,11 @@
+from pathlib import Path as p
 import ctypes
 import cv2
 import mediapipe as mp
 from mediapipe.tasks.python import vision
 
-
-path = "C:\\Users\\praja_mfg91s7\\OneDrive\\Desktop\\Workspace\\Gesture_Base_Mouse\\hand_landmarker.task"
+basepath = p(__file__).resolve().parent
+path = basepath / "hand_landmarker.task"
 
 BaseOptions = mp.tasks.BaseOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
