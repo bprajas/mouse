@@ -22,7 +22,8 @@ def result_callback(result, output_image=None, timestamp_ms=None):
     if ctypes.windll.user32.GetSystemMetrics(80)>1:
         constx,consty=ctypes.windll.user32.GetSystemMetrics(78),ctypes.windll.user32.GetSystemMetrics(79)
     else:
-        constx, consty=ctypes.windll.user32.GetSystemMetrics(0), ctypes.windll.user32.GetSystemMetrics(1)
+        constx=ctypes.windll.user32.GetSystemMetrics(0)
+        consty=ctypes.windll.user32.GetSystemMetrics(1)
     sc=0.9
     sp=1- sc
     min_xy, max_xy=0.03, 0.97
