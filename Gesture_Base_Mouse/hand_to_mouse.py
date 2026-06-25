@@ -1,3 +1,5 @@
+"""Control mouse using MediaPipe hand gestures."""
+
 from pathlib import Path as p
 import ctypes
 
@@ -5,99 +7,123 @@ import cv2
 import mediapipe as mp
 from mediapipe.tasks.python import vision
 
-basepath = p(__file__).resolve().parent
-path = basepath / "hand_landmarker.task"
+base_path = p(__file__).resolve().parent
+model_path = base_path / "hand_landmarker.task"
 
 BaseOptions = mp.tasks.BaseOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
 
 IS_CLICKED = False
-IS_CLICKED2 = False
-PREV_X=0
-PREV_Y=0
+IS_DRAGGING = False
+
+PREV_X = 0.0
+PREV_Y = 0.0
+
 
 def result_callback(result, output_image=None, timestamp_ms=None):
-    num_hands=len(result.handedness)
-    global PREV_X,prev_y,IS_CLICKED,IS_CLICKED2
-    if ctypes.windll.user32.GetSystemMetrics(80)>1:
-        constx=ctypes.windll.user32.GetSystemMetrics(78)
-        consty=ctypes.windll.user32.GetSystemMetrics(79)
+    """Handle hand landmark results and update mouse state."""
+    
+    global PREV_X, PREV_Y, IS_CLICKED, IS_DRAGGING
+    num_hands = len(result.handedness)
+    if ctypes.windll.user32.GetSystemMetrics(80) > 1:
+        screen_width = ctypes.windll.user32.GetSystemMetrics(78)
+        screen_height = ctypes.windll.user32.GetSystemMetrics(79)
     else:
-        constx=ctypes.windll.user32.GetSystemMetrics(0)
-        consty=ctypes.windll.user32.GetSystemMetrics(1)
-    
-    S_C=0.9
-    S_P=1- S_C
-    MIN_XY, MAX_XY=0.03, 0.97
-    
+        screen_width = ctypes.windll.user32.GetSystemMetrics(0)
+        screen_height = ctypes.windll.user32.GetSystemMetrics(1)
+    smoothing = 0.9
+    smoothing_prev = 1 - smoothing
+
+    min_coord = 0.03
+    max_coord = 0.97
+
     for i in range(num_hands):
-        handedness=result.handedness[i][0].category_name
-        landmarks=result.hand_landmarks[i]
+        handedness = result.handedness[i][0].category_name
+        landmarks = result.hand_landmarks[i]
 
-        if handedness=="Right" and num_hands==2:
-            thumbx=landmarks[4].x
-            thumby=landmarks[4].y
-            midx=landmarks[12].x
-            midy=landmarks[12].y
-            dist1=((midx-thumbx)**2 + (midy-thumby)**2)**0.5
+        if handedness == "Right" and num_hands == 2:
+            thumb_x = landmarks[4].x
+            thumb_y = landmarks[4].y
 
-            if dist1<0.05 and not IS_CLICKED2:
+            middle_x = landmarks[12].x
+            middle_y = landmarks[12].y
+
+            drag_distance = (
+                (middle_x - thumb_x) ** 2
+                + (middle_y - thumb_y) ** 2
+            ) ** 0.5
+
+            if drag_distance < 0.05 and not IS_DRAGGING:
                 ctypes.windll.user32.mouse_event(8, 0, 0, 0, 0)
-                IS_CLICKED2=True
-            elif IS_CLICKED2 and dist1 > 0.05:
+                IS_DRAGGING = True
+
+            elif IS_DRAGGING and drag_distance > 0.05:
                 ctypes.windll.user32.mouse_event(16, 0, 0, 0, 0)
-                IS_CLICKED2=False
+                IS_DRAGGING = False
 
-            pos_x=landmarks[8].x
-            pos_y=landmarks[8].y
+            hand_x = landmarks[8].x
+            hand_y = landmarks[8].y
 
-            pos_x=max(MIN_XY, min(MAX_XY, pos_x))
-            pos_y=max(MIN_XY, min(MAX_XY, pos_y))
+            hand_x = max(min_coord, min(max_coord, hand_x))
+            hand_y = max(min_coord, min(max_coord, hand_y))
 
-            screen_x=(pos_x-MIN_XY)/(MAX_XY-MIN_XY)
-            screen_y=(pos_y-MIN_XY)/(MAX_XY-MIN_XY)
+            screen_x = (hand_x - min_coord) / (max_coord - min_coord)
+            screen_y = (hand_y - min_coord) / (max_coord - min_coord)
 
-            PREV_X=PREV_X*S_P+screen_x*S_C
-            PREV_Y=PREV_Y*S_P+screen_y*S_C
+            PREV_X = PREV_X * smoothing_prev + screen_x * smoothing
+            PREV_Y = PREV_Y * smoothing_prev + screen_y * smoothing
 
-            final_x=int(PREV_X*constx)
-            final_y=int(PREV_Y*consty)
+            cursor_x = int(PREV_X * screen_width)
+            cursor_y = int(PREV_Y * screen_height)
 
-            ctypes.windll.user32.SetCursorPos(final_x, final_y)
+            ctypes.windll.user32.SetCursorPos(cursor_x, cursor_y)
 
-        elif handedness=="Left" and num_hands==2:
-            indexx=landmarks[8].x
-            indexy=landmarks[8].y
-            thumbx=landmarks[4].x
-            thumby=landmarks[4].y
+        elif handedness == "Left" and num_hands == 2:
+            index_x = landmarks[8].x
+            index_y = landmarks[8].y
 
-            dist=((indexx-thumbx)**2 + (indexy-thumby)**2)**0.5
+            thumb_x = landmarks[4].x
+            thumb_y = landmarks[4].y
+            click_distance = (
+                (index_x - thumb_x) ** 2
+                + (index_y - thumb_y) ** 2
+            ) ** 0.5
 
-            if dist<0.05 and not IS_CLICKED:
+            if click_distance < 0.05 and not IS_CLICKED:
                 ctypes.windll.user32.mouse_event(2, 0, 0, 0, 0)
-                IS_CLICKED=True
-            elif IS_CLICKED and dist > 0.05:
+                IS_CLICKED = True
+
+            elif IS_CLICKED and click_distance > 0.05:
                 ctypes.windll.user32.mouse_event(4, 0, 0, 0, 0)
-                IS_CLICKED=False
+                IS_CLICKED = False
 
-options =vision.HandLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=path),
+
+options = vision.HandLandmarkerOptions(
+    base_options=BaseOptions(model_asset_path=model_path),
     running_mode=VisionRunningMode.LIVE_STREAM,
-    result_callback=result_callback, 
-    num_hands=2
-    )
+    result_callback=result_callback,
+    num_hands=2,
+)
 
-detector =vision.HandLandmarker.create_from_options(options)
+detector = vision.HandLandmarker.create_from_options(options)
 
-cap =cv2.VideoCapture(0)
-timestamp =0
+cap = cv2.VideoCapture(0)
+timestamp = 0
 
 while True:
-    ret, frametobeflipped =cap.read()
-    frame =cv2.flip(frametobeflipped,1)
-    rgb =cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    mp_image =mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+    ret, frame_to_be_flipped = cap.read()
+
+    frame = cv2.flip(frame_to_be_flipped, 1)
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    mp_image = mp.Image(
+        image_format=mp.ImageFormat.SRGB,
+        data=rgb,
+    )
+
     detector.detect_async(mp_image, timestamp)
-    timestamp+=1
+
+    timestamp += 1
+
     if cv2.waitKey(1) == ord("q"):
         break
