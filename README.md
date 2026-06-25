@@ -59,7 +59,7 @@ Press `q` to quit.
 
 * Multi-monitor support is still a bit cursed.
 * Cursor can occasionally teleport on extended displays.
-* Tracking quality depends on lighting and camera quality and camera position. It is preferable to keep the webcam slightly above or at your level for best functionality.
+* Tracking quality depends on lighting, camera quality, camera position and distance. It is preferable to keep the webcam slightly above and away from yourself for best mouse smoothing.
 * Only tested on Windows.
 
 ## Future Ideas
