@@ -14,6 +14,7 @@ BaseOptions=mp.tasks.BaseOptions
 VisionRunningMode=mp.tasks.vision.RunningMode
 
 class HandMouse:
+    """Converts hand gestures into mouse movements and clicks."""
     def __init__(self):
         """Set constants and states."""
         self.is_clicked=False
@@ -24,8 +25,6 @@ class HandMouse:
     def result_callback(self, result, output_image=None, timestamp_ms=None):
         """Handle hand landmark results and update mouse state."""
 
-        num_hands = len(result.handedness)
-
         if ctypes.windll.user32.GetSystemMetrics(80) > 1:
             screen_width = ctypes.windll.user32.GetSystemMetrics(78)
             screen_height = ctypes.windll.user32.GetSystemMetrics(79)
@@ -34,25 +33,16 @@ class HandMouse:
             screen_height = ctypes.windll.user32.GetSystemMetrics(1)
 
         smoothing = 0.9
-        smoothing_prev = 1 - smoothing
-
         min_coord = 0.03
         max_coord = 0.97
 
-        for i in range(num_hands):
-            handedness = result.handedness[i][0].category_name
-            landmarks = result.hand_landmarks[i]
-
-            if handedness == "Right" and num_hands == 2:
-                thumb_x = landmarks[4].x
-                thumb_y = landmarks[4].y
-
-                middle_x = landmarks[12].x
-                middle_y = landmarks[12].y
-
+        for i, handedness in enumerate(result.handedness):
+            if handedness=="Right" and len(result.handedness)==2:
                 middle_thumb_dist = (
-                    (middle_x - thumb_x)**2
-                    + (middle_y - thumb_y)**2
+                    (result.hand_landmarks[i][12].x-
+                    result.hand_landmarks[i][4].x)**2
+                    +(result.hand_landmarks[i][12].y-
+                    result.hand_landmarks[i][4].y)**2
                 )**0.5
 
                 if middle_thumb_dist < 0.05 and not self.is_rclicked:
@@ -63,43 +53,34 @@ class HandMouse:
                     ctypes.windll.user32.mouse_event(16, 0, 0, 0, 0)
                     self.is_rclicked = False
 
-                hand_x = landmarks[8].x
-                hand_y = landmarks[8].y
-
-                hand_x = max(min_coord, min(max_coord, hand_x))
-                hand_y = max(min_coord, min(max_coord, hand_y))
-
-                screen_x = (hand_x - min_coord) / (max_coord - min_coord)
-                screen_y = (hand_y - min_coord) / (max_coord - min_coord)
+                hand_x=max(min_coord,min(max_coord,result.hand_landmarks[i][8].x))
+                hand_y=max(min_coord,min(max_coord,result.hand_landmarks[i][8].y))
 
                 self.prev_x = (
-                    self.prev_x * smoothing_prev
-                    + screen_x * smoothing
+                    self.prev_x *
+                    (1-smoothing) +
+                    (hand_x - min_coord) / (max_coord - min_coord)*
+                    smoothing
                 )
 
                 self.prev_y = (
-                    self.prev_y * smoothing_prev
-                    + screen_y * smoothing
+                    self.prev_y*
+                    (1-smoothing)+
+                    (hand_y - min_coord) / (max_coord - min_coord)*
+                    smoothing
                 )
-
-                cursor_x = int(self.prev_x * screen_width)
-                cursor_y = int(self.prev_y * screen_height)
 
                 ctypes.windll.user32.SetCursorPos(
-                    cursor_x,
-                    cursor_y,
+                    int(self.prev_x * screen_width),
+                    int(self.prev_y * screen_height),
                 )
 
-            elif handedness == "Left" and num_hands == 2:
-                index_x = landmarks[8].x
-                index_y = landmarks[8].y
-
-                thumb_x = landmarks[4].x
-                thumb_y = landmarks[4].y
-
+            elif handedness=="Left" and len(result.handedness)==2:
                 index_thumb_dist = (
-                    (index_x - thumb_x) ** 2
-                    + (index_y - thumb_y) ** 2
+                    (result.hand_landmarks[i][8].x -
+                    result.hand_landmarks[i][4].x) ** 2
+                    + (result.hand_landmarks[i][8].y -
+                    result.hand_landmarks[i][4].y) ** 2
                 ) ** 0.5
 
                 if index_thumb_dist < 0.05 and not self.is_clicked:
@@ -112,7 +93,6 @@ class HandMouse:
 
     def run(self):
         """Start webcam capture and gesture processing and mouse movement."""
-
         options = vision.HandLandmarkerOptions(
             base_options=BaseOptions(
                 model_asset_path=str(model_path)
@@ -122,9 +102,7 @@ class HandMouse:
             num_hands=2,
         )
 
-        detector = vision.HandLandmarker.create_from_options(
-            options
-        )
+        detector = vision.HandLandmarker.create_from_options(options)
 
         cap = cv2.VideoCapture(0)
         timestamp = 0
@@ -155,10 +133,4 @@ class HandMouse:
             if cv2.waitKey(1) == ord("q"):
                 break
 
-        cap.release()
-        cv2.destroyAllWindows()
-
-
-if __name__ == "__main__":
-    controller = HandMouse()
-    controller.run()
+control = HandMouse()
