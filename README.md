@@ -117,6 +117,4 @@ Press `q` to quit.
 
 ## Current Status
 
-Working prototype.
-
-The application is stable under normal lighting conditions and demonstrates reliable cursor control, clicking, and dragging through hand gestures.
+Works. Mostly.
