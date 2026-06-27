@@ -2,73 +2,121 @@
 
 Control your mouse using hand gestures and a webcam.
 
-Built with MediaPipe hand tracking, OpenCV, and Win32 mouse APIs.
+Gesture Base Mouse uses MediaPipe hand tracking, OpenCV, and the Windows Win32 API to convert hand movements into mouse input. The project tracks both hands in real time, allowing cursor movement, left-clicking, right-clicking, and click-and-drag interactions without touching a physical mouse.
 
-## What It Can Do
+## Features
 
-* Move the cursor using hand tracking
-* Click using a pinch gesture
-* Hold and drag
-* Smooth cursor movement to reduce jitter
-* Basic support for a single extended monitor
+* Real-time hand tracking using MediaPipe
+* Cursor movement using index finger position
+* Left click via pinch gesture, right click via pinch gesture
+* Windows desktop integration through Win32 mouse APIs
+
+## Structure
+
+```text
+.
+├── README.md
+├── pyproject.toml
+├── poetry.lock
+└── src
+    └── gesture_base_mouse
+        ├── __init__.py
+        ├── hand_landmarker.task
+        └── hand_to_mouse.py
+```
 
 ## Controls
 
-My webcam feed had to be mirrored, so the controls are:
+### Cursor Movement
 
-* **Left Hand** → Move cursor / Right Click
-* **Right Hand** → Left Click / Drag
+Move your left index finger to control the cursor position.
 
-### Movement
+### Left Click and Drag
 
-The tip of the index finger is tracked and mapped to screen coordinates.
+Right Hand:
 
-### Clicking
+* Thumb + Index Finger pinch → Mouse Down
+* Release pinch → Mouse Up
 
-Bring the thumb and index finger together on the right hand.
+Holding the pinch allows click-and-drag operations.
 
-* Pinch → Mouse Down
-* Release → Mouse Up
+### Right Click
 
-This allows both normal left clicking and click-and-drag operations.
+Left Hand:
 
-Bring the thumb and middle finger together on the left hand.
+* Thumb + Index Finger pinch → Right Click
 
-* Pinch → Mouse Down
-* Release → Mouse Up
+## Requirements
 
-This allows normal roght click.
+* Python 3.11+
+* Windows
+* Webcam
 
-## Running
+## Installation
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/<your-username>/Gesture_Base_Mouse.git
+cd Gesture_Base_Mouse
+```
+
+### Install Poetry
+
+```bash
+pip install poetry
+```
+
+Verify installation:
+
+```bash
+python -m poetry --version
+```
 
 ### Install Dependencies
 
 ```bash
-pip install opencv-python mediapipe
+python -m poetry install
 ```
 
-### Run
+This creates a virtual environment and installs all project dependencies defined in `pyproject.toml`.
+
+## Running
+
+Run the application using Poetry:
 
 ```bash
-python hand_to_mouse.py
+python -m poetry run python src/gesture_base_mouse/hand_to_mouse.py
+```
+
+Alternatively, activate the Poetry environment first:
+
+```bash
+python -m poetry shell
+python src/gesture_base_mouse/hand_to_mouse.py
 ```
 
 Press `q` to quit.
 
 ## Known Issues
 
-* Multi-monitor support is still a bit cursed.
-* Cursor can occasionally teleport on extended displays.
-* Tracking quality depends on lighting, camera quality, camera position and distance. It is preferable to keep the webcam slightly above and away from yourself for best mouse smoothing.
-* Only tested on Windows.
+* Multi-monitor support is not fully reliable
+* Cursor accuracy depends on lighting conditions
+* Tracking quality depends on webcam quality and positioning
+* Rapid hand motion can occasionally cause cursor jumps
+* Windows only
 
-## Future Ideas
+## Future Improvements
 
-* Better multi-monitor support
-* Eye tracking mode
-* Facial gesture controls
-* Sensitivity settings
+* Calibration system
+* Adjustable sensitivity
+* Custom gesture mapping
+* Eye tracking integration
+* Cross-platform support
+* User configuration profiles
 
 ## Current Status
 
-Works. Mostly.
+Working prototype.
+
+The application is stable under normal lighting conditions and demonstrates reliable cursor control, clicking, and dragging through hand gestures.
