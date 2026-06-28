@@ -32,7 +32,7 @@ class HandMouse:
         min_coord = 0.03
         max_coord = 0.97
         for i, handedness in enumerate(result.handedness):
-            if handedness=="Right" and len(result.handedness)==2:
+            if handedness[0].category_name=="Right" and len(result.handedness)==2:
                 middle_thumb_dist = (
                     (result.hand_landmarks[i][12].x-
                     result.hand_landmarks[i][4].x)**2
@@ -63,7 +63,7 @@ class HandMouse:
                     int(self.prev_x * screen_width),
                     int(self.prev_y * screen_height),
                 )
-            elif handedness=="Left" and len(result.handedness)==2:
+            elif handedness[0].category_name=="Left" and len(result.handedness)==2:
                 index_thumb_dist = (
                     (result.hand_landmarks[i][8].x -
                     result.hand_landmarks[i][4].x) ** 2
@@ -115,3 +115,4 @@ class HandMouse:
                 break
 
 control = HandMouse()
+control.run()
